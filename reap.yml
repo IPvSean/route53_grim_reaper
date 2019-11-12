@@ -1,0 +1,16 @@
+---
+- name: route53 grim reaper
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+
+  tasks:
+    - name: grab all record sets
+      route53_info:
+        query: record_sets
+      register: record_sets
+
+    - name: grab all record sets
+      debug:
+        msg: "{{record_sets}}"
