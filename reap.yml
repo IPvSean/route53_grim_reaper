@@ -4,13 +4,74 @@
   connection: local
   gather_facts: false
   vars:
+    workshop_dns_zone: rhdemo.io
+    max_records: 5
+    host_entries: []
+    ec2_region: us-east-1
+    delete_these_entries: []
 
   tasks:
-    - name: grab all record sets
+    - name: retrieve zone id from AWS
+      route53_zone:
+        zone: "{{workshop_dns_zone}}"
+      register: AWSINFO
+
+    - name: retrieve all record sets
       route53_info:
         query: record_sets
+        hosted_zone_id: "{{AWSINFO.zone_id}}"
+        hosted_zone_method: details
+        max_items: "{{max_records}}"
       register: record_sets
 
     - name: grab all record sets
       debug:
         msg: "{{record_sets}}"
+
+    - name: grab all record sets
+      debug:
+        msg: "{{record_sets.ResourceRecordSets}}"
+
+    # - name: test print ResourceRecordSets info
+    #   debug:
+    #     msg: "{{item}}"
+    #   loop: "{{record_sets.ResourceRecordSets}}"
+
+   # we want to transfer a name like student2.005c.rhdemo.io.
+   # into the format that is tagged-> 005c-student2-ansible
+   # in the future we could simplify this by just tagging the rendered DNS
+   # as the ansible tag, so we can pull this at anytime
+    - set_fact:
+        host_entries:  "{{host_entries + [ item['Name'].split('.')[1] + '-' + item['Name'].split('.')[0] + '-ansible' ]}}"
+      loop: "{{record_sets.ResourceRecordSets}}"
+      when:
+       - item['Type'] == 'A'
+       - item['ResourceRecords'] is defined
+
+    # - name: test print ResourceRecordSets info
+    #   debug:
+    #     msg: "{{item}}"
+    #   loop: "{{host_entries}}"
+
+    - name: loop over this logic
+      include_tasks: find_instance.yml
+      loop: "{{host_entries}}"
+
+    - name: these are marked for deletion - verficiation list
+      debug:
+        msg:
+          - "please delete record entries {{delete_these_entries}}"
+
+    # A helpful reminder of what to look out for post-update.
+    - pause:
+        prompt: "If you press enter, it will now delete these entries"
+
+   # this is way too hard and complicated :(
+    - name: delete dns entries marked for deletion
+      route53:
+        state: "absent"
+        zone: "{{workshop_dns_zone}}"
+        record: "{{item}}"
+        type: A
+        value: "{{ (record_sets.ResourceRecordSets | selectattr('Name', 'match', item + '.') | map(attribute='ResourceRecords') | first | first)['Value'] }}"
+      loop: "{{ delete_these_entries }}"

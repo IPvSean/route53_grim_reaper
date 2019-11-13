@@ -1,0 +1,24 @@
+---
+- name: route53 grim reaper
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    workshop_dns_zone: rhdemo.io
+    max_records: 5
+    ec2_region: us-east-1
+    device: 005c-student2-ansible
+    #device:  0dde-student1-ansible
+
+  tasks:
+    - name: grab facts for node1 node
+      ec2_instance_info:
+        region: "{{ ec2_region }}"
+        filters:
+          instance-state-name: running
+          "tag:Name": "{{device}}"
+      register: instance_info
+
+    - name: test print ResourceRecordSets info
+      debug:
+        msg: "{{instance_info}}"
