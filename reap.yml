@@ -24,13 +24,13 @@
         max_items: "{{max_records}}"
       register: record_sets
 
-    - name: grab all record sets
-      debug:
-        msg: "{{record_sets}}"
+    # - name: grab all record sets
+    #   debug:
+    #     msg: "{{record_sets}}"
 
-    - name: grab all record sets
-      debug:
-        msg: "{{record_sets.ResourceRecordSets}}"
+    # - name: grab all record sets
+    #   debug:
+    #     msg: "{{record_sets.ResourceRecordSets}}"
 
     # - name: test print ResourceRecordSets info
     #   debug:

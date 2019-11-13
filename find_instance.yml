@@ -1,15 +1,38 @@
 - name: grab facts for found instance node
   ec2_instance_info:
-    region: "{{ ec2_region }}"
+    region: "us-east-1"
     filters:
-      instance-state-name: running
       "tag:Name": "{{item}}"
   register: instance_info
+
+- name: grab facts for found instance node
+  ec2_instance_info:
+    region: "ap-northeast-1"
+    filters:
+      "tag:Name": "{{item}}"
+  register: instance_info
+  when: instance_info["instances"] | length == 0
+
+- name: grab facts for found instance node
+  ec2_instance_info:
+    region: "eu-central-1"
+    filters:
+      "tag:Name": "{{item}}"
+  register: instance_info
+  when: instance_info["instances"] | length == 0
+
+- name: grab facts for found instance node
+  ec2_instance_info:
+    region: "ap-southeast-1"
+    filters:
+      "tag:Name": "{{item}}"
+  register: instance_info
+  when: instance_info["instances"] | length == 0
 
 - name: these are marked for deletion
   debug:
     msg:
-      - "entry: {{item}} does not exist in AWS region {{ec2_region}}"
+      - "entry: {{item}} does not exist in any AWS region"
       - "please delete record entry {{item.split('-')[1] + '.' + item.split('-')[0] + '.' + workshop_dns_zone}}"
   when: instance_info["instances"] | length == 0
 
