@@ -1,5 +1,11 @@
 # route53_grim_reaper
-this repo is going to find stale route53 entries and destroy them from orbit
+
+This repo is going to find stale route53 entries and destroy them from orbit
+1) grab all known route entries (default to `rhdemo.io` for me).  This is configurable by variable `workshop_dns_zone`
+2) check with [ec2_instance_info module](https://docs.ansible.com/ansible/latest/modules/ec2_instance_info_module.html) to make sure there is no IP address for the associated tag.  This logic could be a ping... but still thinking about how that would look.
+3) reap
+
+![grim reaper](death.jpg)
 
 # How to use
 
@@ -36,3 +42,7 @@ changed: [localhost] => (item=student9.005c.rhdemo.io)
 changed: [localhost] => (item=student10.0097.rhdemo.io)
 changed: [localhost] => (item=student11.0097.rhdemo.io)
 ```
+
+# Author
+
+[@IPvSean](twitter.com/ipvsean) likes reaping

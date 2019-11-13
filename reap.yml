@@ -5,9 +5,8 @@
   gather_facts: false
   vars:
     workshop_dns_zone: rhdemo.io
-    max_records: 10
+    max_records: 100
     host_entries: []
-    ec2_region: us-east-1
     delete_these_entries: []
 
   tasks:
