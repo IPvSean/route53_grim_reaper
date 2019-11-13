@@ -3,39 +3,41 @@
     region: "us-east-1"
     filters:
       "tag:Name": "{{item}}"
-  register: instance_info
+  register: east_info
 
 - name: grab facts for found instance node
   ec2_instance_info:
     region: "ap-northeast-1"
     filters:
       "tag:Name": "{{item}}"
-  register: instance_info
-  when: instance_info["instances"] | length == 0
+  register: northeast_info
 
 - name: grab facts for found instance node
   ec2_instance_info:
     region: "eu-central-1"
     filters:
       "tag:Name": "{{item}}"
-  register: instance_info
-  when: instance_info["instances"] | length == 0
+  register: central_info
 
 - name: grab facts for found instance node
   ec2_instance_info:
     region: "ap-southeast-1"
     filters:
       "tag:Name": "{{item}}"
-  register: instance_info
-  when: instance_info["instances"] | length == 0
+  register: southeast_info
 
-- name: these are marked for deletion
-  debug:
-    msg:
-      - "entry: {{item}} does not exist in any AWS region"
-      - "please delete record entry {{item.split('-')[1] + '.' + item.split('-')[0] + '.' + workshop_dns_zone}}"
-  when: instance_info["instances"] | length == 0
+- name: spit out entry that is marked for deltion
+  block:
+  - name: these are marked for deletion
+    debug:
+      msg:
+        - "entry: {{item}} does not exist in any AWS region"
+        - "please delete record entry {{item.split('-')[1] + '.' + item.split('-')[0] + '.' + workshop_dns_zone}}"
 
-- set_fact:
-    delete_these_entries:  "{{delete_these_entries + [ item.split('-')[1] + '.' + item.split('-')[0] + '.' + workshop_dns_zone ] }}"
-  when: instance_info["instances"] | length == 0
+  - set_fact:
+      delete_these_entries:  "{{delete_these_entries + [ item.split('-')[1] + '.' + item.split('-')[0] + '.' + workshop_dns_zone ] }}"
+  when:
+    - east_info["instances"] | length == 0
+    - northeast_info["instances"] | length == 0
+    - central_info["instances"] | length == 0
+    - southeast_info["instances"] | length == 0
