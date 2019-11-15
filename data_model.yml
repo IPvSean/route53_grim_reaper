@@ -1,0 +1,49 @@
+---
+- name: route53 grim reaper
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    workshop_dns_zone: rhdemo.io
+    max_records: 5
+    host_entries: []
+    delete_these_entries: []
+
+  tasks:
+    - name: retrieve zone id from AWS
+      route53_zone:
+        zone: "{{workshop_dns_zone}}"
+      register: AWSINFO
+
+    - name: retrieve all record sets
+      route53_info:
+        query: record_sets
+        hosted_zone_id: "{{AWSINFO.zone_id}}"
+        hosted_zone_method: details
+        max_items: "{{max_records}}"
+      register: record_sets
+
+    # - name: grab all record sets
+    #   debug:
+    #     msg: "{{record_sets}}"
+
+    - name: grab all record sets
+      debug:
+        msg: "{{record_sets.ResourceRecordSets}}"
+
+    - name: delete dns entries marked for deletion
+      route53:
+        state: "get"
+        zone: "{{workshop_dns_zone}}"
+        record: "{{item}}"
+        type: A
+        value: "{{ item['ResourceRecords'][0]['Value'] }}"
+      loop: "{{record_sets.ResourceRecordSets}}"
+      when:
+       - item['Type'] == 'A'
+       - item['ResourceRecords'] is defined
+      register: outputforthis
+
+    - name: grab all record sets
+      debug:
+        msg: "{{outputforthis}}"
